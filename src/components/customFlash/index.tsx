@@ -3,16 +3,15 @@ import {Image, View, ImageSourcePropType} from 'react-native';
 import CustomText from '../CustomText';
 import {useTheme} from '../../hooks/useTheme';
 import {width} from '../../themes/spacing';
-import Spacer from '../spacer';
+import Spacer from '../Spacer';
 import {getStyles} from './styles';
 
 interface CustomFlashProps {
   msg: string;
-  desc?: string;
   img: ImageSourcePropType;
 }
 
-const CustomFlash: React.FC<CustomFlashProps> = ({msg, desc = undefined, img}) => {
+const CustomFlash: React.FC<CustomFlashProps> = ({msg, img}) => {
   const {theme} = useTheme();
   const styles = getStyles(theme);
 
@@ -22,11 +21,9 @@ const CustomFlash: React.FC<CustomFlashProps> = ({msg, desc = undefined, img}) =
       <Spacer width={width * 0.025} />
       <View style={styles.txtStyle}>
         <CustomText style={styles.msgTxt}>{msg}</CustomText>
-        {desc && <CustomText style={styles.descTxt}>{desc}</CustomText>}
       </View>
     </View>
   );
 };
 
 export default CustomFlash;
-

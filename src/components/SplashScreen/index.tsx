@@ -42,7 +42,7 @@ const SplashScreen: React.FC<SplashScreenProps> = ({onFinish}) => {
       }).start(() => {
         onFinish();
       });
-    }, 3000);
+    }, 2000);
 
     return () => clearTimeout(timer);
   }, [onFinish, fadeAnim, scaleAnim, rotateAnim]);
@@ -97,7 +97,7 @@ const SplashScreen: React.FC<SplashScreenProps> = ({onFinish}) => {
                 </CustomText>
               </View>
             </Animated.View>
-          )}
+           )} 
         </View>
         <CustomText style={[styles.appName, {color: theme.primaryColor}]}>
           {AppConstants.appName}
@@ -178,4 +178,3 @@ const styles = StyleSheet.create({
 });
 
 export default SplashScreen;
-

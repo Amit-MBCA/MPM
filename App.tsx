@@ -10,9 +10,9 @@ import 'react-native-reanimated';
 import { width } from './src/themes/spacing';
 import { fontFamily } from './src/assets/fonts/fontFamily';
 import { appImages } from './src/themes/appImages';
-import CustomFlash from './src/components/customFlash';
+import CustomFlash from './src/components/CustomFlash';
 import FlashMessage from 'react-native-flash-message';
-import Loader from './src/components/loader';
+import Loader from './src/components/Loader';
 import SplashScreen from './src/components/SplashScreen';
 
 function App() {
@@ -52,8 +52,8 @@ function App() {
                     <CustomFlash
                       msg={message.message}
                       img={
-                        message.message == "red" ||
-                        message.message == "error"
+                        message.type == "red" ||
+                        message.type == "error"
                           ? appImages.errorSign
                           : appImages.doneCheck
                       }

@@ -65,8 +65,7 @@ const ThemeToggle: React.FC = () => {
         <Animated.View style={[styles.thumb, animatedSwitchStyle]}>
           <View style={styles.thumbInner}>
             <Animated.View style={[styles.iconContainer, moonRotation]}>
-              <Image source={appImages.moon} style={styles.moonIcon} />
-              
+              <Image source={appImages.moon} style={styles.moonIcon} />              
             </Animated.View>
             <Animated.View style={[styles.iconContainer, sunRotation]}>
               <Image source={appImages.sun} style={styles.sunIcon} />

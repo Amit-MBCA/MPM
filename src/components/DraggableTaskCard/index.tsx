@@ -18,9 +18,12 @@ const {width: SCREEN_WIDTH} = Dimensions.get('window');
 interface DraggableTaskCardProps {
   task: Task;
   onPress: () => void;
-  onDragStart: (task: Task) => void;
+  onDragStart: (task: Task, pos: {x: number; y: number}) => void; // notifies parent to show floating clone
+  onDragMove: (pos: {x: number; y: number}) => void; // updates floating clone position
   onDragEnd: (taskId: string, newStatus: 'todo' | 'inProgress' | 'done') => void;
   onHoverColumn: (column: string | null) => void;
+  isHidden?: boolean;
+  clearActiveDraggedTask: () => void;
 }
 
 const DraggableTaskCard: React.FC<DraggableTaskCardProps> = ({
@@ -28,16 +31,21 @@ const DraggableTaskCard: React.FC<DraggableTaskCardProps> = ({
   onPress,
   onDragStart,
   onDragEnd,
+  onDragMove,
   onHoverColumn,
+  isHidden = false,
+  clearActiveDraggedTask
 }) => {
   const translateX = useSharedValue(0);
   const translateY = useSharedValue(0);
   const scale = useSharedValue(1);
   const opacity = useSharedValue(1);
+  const isDragging = useSharedValue(false);
 
   const pan = Gesture.Pan()
-    .onStart(() => {
-      runOnJS(onDragStart)(task);
+    .onStart((e) => {
+      isDragging.value = true;
+      runOnJS(onDragStart)(task, {x: e.absoluteX, y: e.absoluteY});
       scale.value = withSpring(1.05);
       opacity.value = withSpring(0.8);
     })
@@ -47,6 +55,7 @@ const DraggableTaskCard: React.FC<DraggableTaskCardProps> = ({
 
       const columnWidth = SCREEN_WIDTH / 3;
       const absoluteX = e.absoluteX;
+      runOnJS(onDragMove)({x: e.absoluteX, y: e.absoluteY});
 
       if (absoluteX < columnWidth) {
         runOnJS(onHoverColumn)('todo');
@@ -57,6 +66,8 @@ const DraggableTaskCard: React.FC<DraggableTaskCardProps> = ({
       }
     })
     .onEnd(e => {
+
+      isDragging.value = false;
       const columnWidth = SCREEN_WIDTH / 3;
       const absoluteX = e.absoluteX;
 
@@ -72,6 +83,8 @@ const DraggableTaskCard: React.FC<DraggableTaskCardProps> = ({
 
       if (newStatus !== task.status) {
         runOnJS(onDragEnd)(task.id, newStatus);
+      }else{
+        runOnJS(clearActiveDraggedTask)();
       }
 
       translateX.value = withSpring(0);
@@ -88,8 +101,8 @@ const DraggableTaskCard: React.FC<DraggableTaskCardProps> = ({
         {translateY: translateY.value},
         {scale: scale.value},
       ],
-      opacity: opacity.value,
-      zIndex: translateX.value !== 0 || translateY.value !== 0 ? 1000 : 1,
+      // opacity: opacity.value,
+      opacity: isDragging.value || isHidden ? 0 : 1
     };
   });
 
@@ -103,4 +116,3 @@ const DraggableTaskCard: React.FC<DraggableTaskCardProps> = ({
 };
 
 export default DraggableTaskCard;
-

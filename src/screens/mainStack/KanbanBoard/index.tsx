@@ -11,21 +11,20 @@ import {
 } from 'react-native';
 import CustomText from '../../../components/CustomText';
 import {useDispatch, useSelector} from 'react-redux';
-import {useNavigation, useRoute} from '@react-navigation/native';
+import {useNavigation} from '@react-navigation/native';
 import Animated, {
   useAnimatedStyle,
+  useSharedValue,
   withSpring,
 } from 'react-native-reanimated';
 import {GestureHandlerRootView} from 'react-native-gesture-handler';
 import DraggableTaskCard from '../../../components/DraggableTaskCard';
-import FloatingButton from '../../../components/FloatingButton';
 import {
   moveTask,
   addTask,
-  setCurrentProject,
   setProjects,
 } from '../../../redux/slices/projectsSlice';
-import {syncOnTaskUpdate, syncOnProjectSwitch} from '../../../redux/services/syncService';
+import {syncOnProjectSwitch} from '../../../redux/services/syncService';
 import {Task} from '../../../redux/slices/projectsSlice';
 import {getTasksByStatus} from '../../../utils/calculations';
 import {useTheme} from '../../../hooks/useTheme';
@@ -33,10 +32,12 @@ import { topInset } from '../../../themes/spacing';
 import fontSizes from '../../../themes/fontSizes';
 import { fontFamily } from '../../../assets/fonts/fontFamily';
 import {AppConstants} from '../../../utils/appConstants';
+import TaskCard from '../../../components/TaskCard';
 
 const {width: SCREEN_WIDTH} = Dimensions.get('window');
 const COLUMN_WIDTH = (SCREEN_WIDTH - 48) / 3;
-
+const FLOAT_CARD_WIDTH = COLUMN_WIDTH - 8;
+const FLOAT_CARD_HEIGHT = 80; // 
 const KanbanBoardScreen: React.FC = () => {
   const navigation = useNavigation();
   const dispatch = useDispatch();
@@ -45,6 +46,7 @@ const KanbanBoardScreen: React.FC = () => {
   const currentProjectId = useSelector(
     (state: any) => state.projects.currentProjectId,
   );
+  const [activeDraggedTask, setActiveDraggedTask] = useState<Task | null>(null);
   const [modalVisible, setModalVisible] = useState(false);
   const [draggedTask, setDraggedTask] = useState(null);
   const [selectedColumn, setSelectedColumn] = useState<
@@ -55,6 +57,9 @@ const KanbanBoardScreen: React.FC = () => {
 
   const currentProject = projects.find((p: any) => p.id === currentProjectId);
 
+  const floatX = useSharedValue(0);
+  const floatY = useSharedValue(0);
+  console.log('No status change', activeDraggedTask);
   useEffect(() => {
     if (currentProject) {
       syncOnProjectSwitch(
@@ -147,7 +152,15 @@ const KanbanBoardScreen: React.FC = () => {
     [navigation],
   );
 
-  const handleDragStart = useCallback((task: Task) => {
+   const handleDragStart = useCallback((task: Task, pos: {x: number; y: number}) => {
+    setActiveDraggedTask(task);
+    floatX.value = pos.x;
+    floatY.value = pos.y;
+  }, []);
+
+  const handleDragMove = useCallback((pos: {x: number; y: number}) => {
+    floatX.value = pos.x;
+    floatY.value = pos.y;
   }, []);
 
   const handleDragEnd = useCallback(
@@ -187,23 +200,47 @@ const KanbanBoardScreen: React.FC = () => {
       }
       setDraggedTask(null);
       setHoveredColumn(null);
+      setActiveDraggedTask(null);
     },
     [currentProjectId, dispatch, projects],
   );
+
+    const floatingStyle = useAnimatedStyle(() => {
+    return {
+      position: 'absolute',
+      width: FLOAT_CARD_WIDTH,
+      height: FLOAT_CARD_HEIGHT,
+      top: withSpring(floatY.value - FLOAT_CARD_HEIGHT / 2),
+      left: withSpring(floatX.value - FLOAT_CARD_WIDTH / 2),
+      zIndex: 99999,
+      elevation: 99,
+      shadowColor: '#000',
+      shadowOffset: {width: 0, height: 6},
+      shadowOpacity: 0.15,
+      shadowRadius: 10,
+      transform: [{scale: withSpring(activeDraggedTask ? 1.02 : 1)}],
+    } as any;
+  });
 
   const renderTask = useCallback(
     (task: Task, status: 'todo' | 'inProgress' | 'done') => {
       return (
         <DraggableTaskCard
-          task={task}
+          task={task}ß
           onPress={() => handleTaskPress(task)}
           onDragStart={handleDragStart}
+          onDragMove={handleDragMove}
           onDragEnd={handleDragEnd}
           onHoverColumn={setHoveredColumn}
+          isHidden={activeDraggedTask?.id === task.id}
+          clearActiveDraggedTask={() => {
+            console.log('Clearing active dragged task');
+            setActiveDraggedTask(null);
+          }}
         />
       );
     },
-    [handleTaskPress, handleDragStart, handleDragEnd],
+    [handleTaskPress, handleDragStart, handleDragEnd,handleDragMove, activeDraggedTask],
   );
 
   const renderColumn = useCallback(
@@ -276,6 +313,12 @@ const KanbanBoardScreen: React.FC = () => {
         {renderColumn('In Progress', inProgressTasks, 'inProgress', theme.inProgress)}
         {renderColumn('Done', doneTasks, 'done', theme.done)}
       </View>
+
+        {activeDraggedTask && (
+        <Animated.View pointerEvents="none" style={floatingStyle as any}>
+          <TaskCard task={activeDraggedTask} onPress={() => {}} />
+        </Animated.View>
+      )}
 
       <Modal
         visible={modalVisible}
@@ -456,7 +499,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginTop: 50,
   },
+  
 });
 
 export default KanbanBoardScreen;
-

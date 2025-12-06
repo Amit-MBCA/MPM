@@ -4,7 +4,6 @@ import globalReducer from './globalSlice';
 import persistReducer from 'redux-persist/es/persistReducer';
 import projectsReducer from './projectsSlice';
 
-
 const globalPersistConfig = {
   key: 'global',
   storage: AsyncStorage,
