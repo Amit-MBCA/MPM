@@ -226,7 +226,7 @@ const KanbanBoardScreen: React.FC = () => {
     (task: Task, status: 'todo' | 'inProgress' | 'done') => {
       return (
         <DraggableTaskCard
-          task={task}ß
+          task={task}
           onPress={() => handleTaskPress(task)}
           onDragStart={handleDragStart}
           onDragMove={handleDragMove}
